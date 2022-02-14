@@ -20,11 +20,15 @@ struct block {
 
 int main(void) {
 
+    void *p;
+
+    print_data();
+    p = myalloc(64);
     print_data();
 
 }
 
-int myalloc(int bytes){
+void * myalloc(int bytes){
 
 	if (head == NULL) {
     head = sbrk(1024);
@@ -37,14 +41,23 @@ int myalloc(int bytes){
         int actual_size = PADDED_SIZE(bytes);
 
         struct block *cur = head->next;
-        cur->next = NULL;
-        cur->size = actual_size;
-        cur->in_use = 1;
-    
-	    int padded_block_size = PADDED_SIZE(sizeof(struct block));
+        
+        while (cur) {
+            if (cur->next == NULL) {
+                cur->size = actual_size;
+                cur->in_use = 1;
 
-    
-        return PTR_OFFSET(cur, padded_block_size);
+                int padded_block_size = PADDED_SIZE(sizeof(struct block));
+
+                return PTR_OFFSET(cur, padded_block_size);
+                }
+            
+            else {
+                cur = cur->next;
+            }
+        }
+        
+    return NULL;
     }
 }
 
@@ -59,7 +72,7 @@ void print_data(void)
 
     while (b != NULL) {
         // Uncomment the following line if you want to see the pointer values
-        // printf("[%p:%d,%s]", b, b->size, b->in_use? "used": "free");
+        printf("[%p:%d,%s]", b, b->size, b->in_use? "used": "free");
         printf("[%d,%s]", b->size, b->in_use? "used": "free");
         if (b->next != NULL) {
             printf(" -> ");
