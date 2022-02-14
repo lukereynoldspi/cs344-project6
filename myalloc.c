@@ -43,7 +43,7 @@ void * myalloc(int bytes){
         struct block *cur = head->next;
         
         while (cur) {
-            if (cur->next == NULL) {
+            if (cur->in_use == 0 && (actual_size + PADDED_SIZE(sizeof(struct block))) < cur->size) {
                 cur->size = actual_size;
                 cur->in_use = 1;
 
