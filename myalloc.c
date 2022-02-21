@@ -18,9 +18,23 @@ struct block {
     int size;     // Bytes
     int in_use;   // Boolean
 };
-//void * find_space {
-//
-//}
+void * find_space(int bytes) {
+    struct block *cur = head;
+    bytes = bytes + GET_PAD(bytes);
+
+    while(cur) {
+        if (cur->size >= bytes) {
+            split_space(cur, bytes);
+            cur->in_use = 1;
+            return cur;
+        }
+        cur = cur->next;
+
+    }
+    return NULL;
+
+
+}
 void * split_space(struct block *current_node, int requested_size) {
     int required_space = PADDED_SIZE(sizeof(requested_size)) + PADDED_SIZE(sizeof(struct block)) + 16;
     if (current_node->size >= required_space) {
