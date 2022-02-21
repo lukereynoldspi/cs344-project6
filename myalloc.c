@@ -18,7 +18,18 @@ struct block {
     int size;     // Bytes
     int in_use;   // Boolean
 };
+void * split_space(struct block *current_node, int requested_size) {
+    int required_space = PADDED_SIZE(sizeof(requested_size)) + PADDED_SIZE(sizeof(struct block)) + 16;
+    if (current_node->size >= required_space) {
+        struct block *new;
+        new->size = required_space;
 
+    }
+}
+
+void * myfree(void) {
+    
+}
 void * myalloc(int bytes){
 
 	if (head == NULL) {
@@ -30,8 +41,9 @@ void * myalloc(int bytes){
     int actual_size = PADDED_SIZE(bytes); // mult of 16
     int padded_block_size = PADDED_SIZE(sizeof(struct block)); // 16 bytes
 
-    //struct block *cur = head->next;
-    //head->in_use = 1;
+    bytes = bytes + actual_size;
+
+    struct block *cur = head->next;
     while (cur) {
         if (cur->in_use == 0 && (actual_size + padded_block_size <= cur->size)) {
 
@@ -81,17 +93,6 @@ void print_data(void)
 
 int main(void) {
 
-    void *p;
-
     print_data();
-    p = myalloc(16);
-    print_data();
-    p = myalloc(16);
-    print_data();
-    p = myalloc(16);
-    print_data();
-    p = myalloc(2000);
-    print_data();
-    printf("%p\n", p);
 
 }
