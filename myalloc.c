@@ -18,6 +18,20 @@ struct block {
     int size;     // Bytes
     int in_use;   // Boolean
 };
+
+void * split_space(struct block *current_node, int requested_size) {
+    int required_space = PADDED_SIZE(sizeof(requested_size)) + PADDED_SIZE(sizeof(struct block)) + 16;
+    if (current_node->size >= required_space) {
+        struct block *new = current_node->next;
+        new->size = current_node->size - (PADDED_SIZE(requested_size) + (PADDED_SIZE(sizeof(struct block))));
+        new->in_use = 0;
+        new->next = NULL;
+
+        current_node->size = PADDED_SIZE(requested_size);
+
+    }
+}
+
 void * find_space(int bytes) {
     struct block *cur = head;
     bytes = bytes + GET_PAD(bytes);
@@ -34,18 +48,6 @@ void * find_space(int bytes) {
     return NULL;
 
 
-}
-void * split_space(struct block *current_node, int requested_size) {
-    int required_space = PADDED_SIZE(sizeof(requested_size)) + PADDED_SIZE(sizeof(struct block)) + 16;
-    if (current_node->size >= required_space) {
-        struct block *new = current_node->next;
-        new->size = current_node->size - (PADDED_SIZE(requested_size) + (PADDED_SIZE(sizeof(struct block))));
-        new->in_use = 0;
-        new->next = NULL;
-
-        current_node->size = PADDED_SIZE(requested_size);
-
-    }
 }
 
 void myfree(void * val) {
