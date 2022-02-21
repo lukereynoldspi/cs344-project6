@@ -18,16 +18,24 @@ struct block {
     int size;     // Bytes
     int in_use;   // Boolean
 };
+//void * find_space {
+//
+//}
 void * split_space(struct block *current_node, int requested_size) {
     int required_space = PADDED_SIZE(sizeof(requested_size)) + PADDED_SIZE(sizeof(struct block)) + 16;
     if (current_node->size >= required_space) {
-        struct block *new;
-        new->size = required_space;
+        struct block *new = current_node->next;
+        new->size = current_node->size - (PADDED_SIZE(requested_size) + (PADDED_SIZE(sizeof(struct block))));
+        new->in_use = 0;
+        new->next = NULL;
+
+        current_node->size = PADDED_SIZE(requested_size);
 
     }
 }
 
-void * myfree(void) {
+void myfree(void * val) {
+
     
 }
 void * myalloc(int bytes){
