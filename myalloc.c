@@ -19,41 +19,41 @@ struct block {
     int in_use;   // Boolean
 };
 
-void * split_space(struct block *current_node, int requested_size) {
-    int required_space = PADDED_SIZE(sizeof(requested_size)) + PADDED_SIZE(sizeof(struct block)) + 16;
-    if (current_node->size >= required_space) {
-        struct block *new = current_node->next;
-        new->size = current_node->size - (PADDED_SIZE(requested_size) + (PADDED_SIZE(sizeof(struct block))));
+void split_space(struct block *current_node, int requested_size) {
+    int padded_block_size = PADDED_SIZE(sizeof(struct block));
+    int old_size = current_node->size;
+
+    int remaining_space = old_size - requested_size - padded_block_size;
+    int room_to_split = remaining_space >= 16;
+
+    if (room_to_split) {
+
+        struct block *new = PTR_OFFSET(current_node, requested_size + padded_block_size);
+
+        new->size = current_node->size - (requested_size + padded_block_size);
+
+        current_node->size = requested_size;
+
         new->in_use = 0;
+
+        current_node->next = new;
+
         new->next = NULL;
-
-        current_node->size = PADDED_SIZE(requested_size);
-
     }
-}
-
-void * find_space(int bytes) {
-    struct block *cur = head;
-    bytes = bytes + GET_PAD(bytes);
-
-    while(cur) {
-        if (cur->size >= bytes) {
-            split_space(cur, bytes);
-            cur->in_use = 1;
-            return cur;
-        }
-        cur = cur->next;
-
-    }
-    return NULL;
-
-
 }
 
 void myfree(void * p) {
-    struct block *cur = head;
-    while(cur) {
-    }  
+    struct block *cur = PTR_OFFSET(p, -PADDED_SIZE(sizeof(struct block)));
+    cur->in_use = 0;
+    while (cur->next != NULL) {
+        if (cur->in_use == 0 && cur->next->in_use == 0) {
+            cur->size = cur->next->size + cur->size + PADDED_SIZE(sizeof(struct block));
+            cur->next = cur->next->next;
+        }
+        else {
+            cur = cur->next;
+        }
+    }
 }
 void * myalloc(int bytes){
 
@@ -66,23 +66,12 @@ void * myalloc(int bytes){
     int actual_size = PADDED_SIZE(bytes); // mult of 16
     int padded_block_size = PADDED_SIZE(sizeof(struct block)); // 16 bytes
 
-    bytes = bytes + actual_size;
-
     struct block *cur = head;
-    while (cur) {
-        if (cur->in_use == 0 && (actual_size + padded_block_size <= cur->size)) {
+    while (cur != NULL) {
+        if (cur->in_use == 0 && cur->size >= actual_size) {
 
-            cur->size = actual_size;
+            split_space(cur, actual_size);
             cur->in_use = 1;
-
-            struct block *nxt = PTR_OFFSET(cur, padded_block_size + actual_size); // struct block to separate memory pools
-            nxt->next = NULL;
-            nxt->in_use = 0;
-            nxt->size = cur->size - (actual_size + padded_block_size);
-
-            cur->next = nxt;
-
-            find_space(bytes);
 
             return PTR_OFFSET(cur, padded_block_size);
             }
@@ -118,12 +107,15 @@ void print_data(void)
 }
 
 int main(void) {
+void *p, *q, *r, *s;
 
-    void *p;
+p = myalloc(10); print_data();
+q = myalloc(20); print_data();
+r = myalloc(30); print_data();
+s = myalloc(40); print_data();
 
-    p = myalloc(5);
-    print_data();
-
-    p = myalloc(2000);
-    print_data();
+myfree(q); print_data();
+myfree(p); print_data();
+myfree(s); print_data();
+myfree(r); print_data();
 }
